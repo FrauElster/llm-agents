@@ -1,18 +1,19 @@
 // src/agents.ts
-import { Provider, type ModelName, type ModelType, type PromptMessage, type CompletionResponse, type BatchStatus } from './types.ts';
-import { GoogleProvider } from './providers/google.ts';
-import { OpenAIProvider } from './providers/openai.ts';
+import { Provider, type ModelName, type ModelType, type PromptMessage, type CompletionResponse, type BatchStatus, type LLMRequestOptions, type BatchRequestOptions } from './types.js';
+import { GoogleProvider } from './providers/google.js';
+import { OpenAIProvider } from './providers/openai.js';
 
 export class LLMAgent<T = string> {
-    private name: string;
-    private basePrompt: string;
-    private model: ModelType;
-    private provider: Provider;
-    private modelName: ModelName;
+    name: string;
+    model: ModelType;
+    modelName: ModelName;
+    provider: Provider;
+    basePrompt: string;
     private apiKey: string;
     private baseUrl?: string;
     private fetchFn: typeof fetch;
     private providerInstance: GoogleProvider | OpenAIProvider;
+    private sampleObj?: T;
 
     constructor(options: {
         name: string;
@@ -46,6 +47,7 @@ export class LLMAgent<T = string> {
 
         if (options.sampleObj) {
             this.validateBasePrompt(options.sampleObj);
+            this.sampleObj = options.sampleObj;
         }
     }
 
@@ -99,20 +101,6 @@ export class LLMAgent<T = string> {
     }
 
     /**
-     * Get the name of this agent
-     */
-    getName(): string {
-        return this.name;
-    }
-
-    /**
-     * Get the model being used by this agent
-     */
-    getModel(): ModelType {
-        return this.model;
-    }
-
-    /**
      * Helper to prepend the base prompt to messages
      */
     private prependBasePrompt(messages: PromptMessage[]): PromptMessage[] {
@@ -129,13 +117,14 @@ export class LLMAgent<T = string> {
     /**
      * Send a prompt to the model and get a completion
      */
-    async prompt(messages: PromptMessage[], options: any = {}): Promise<CompletionResponse<T>> {
+    async prompt(messages: PromptMessage[], options: Omit<LLMRequestOptions<T>, 'sampleObj'> = {}): Promise<CompletionResponse<T>> {
         const messagesWithBasePrompt = this.prependBasePrompt(messages);
 
         // Add agent name to options
         const optionsWithAgent = {
             ...options,
             agentName: this.name,
+            sampleObj: this.sampleObj,
         };
 
         return this.providerInstance.prompt<T>(messagesWithBasePrompt, this.modelName, optionsWithAgent);
@@ -144,7 +133,7 @@ export class LLMAgent<T = string> {
     /**
      * Create a batch of prompts
      */
-    async createBatch(prompts: PromptMessage[][], options: any = {}): Promise<string> {
+    async createBatch(prompts: PromptMessage[][], options: Omit<BatchRequestOptions<T>, 'sampleObj'> = {}): Promise<string> {
         // Add base prompt to each message set
         const promptsWithBasePrompt = prompts.map(messages => this.prependBasePrompt(messages));
 
@@ -152,6 +141,7 @@ export class LLMAgent<T = string> {
         const optionsWithAgent = {
             ...options,
             agentName: this.name,
+            sampleObj: this.sampleObj,
         };
 
         try {
@@ -183,9 +173,9 @@ export class LLMAgent<T = string> {
     /**
      * Retrieve results from a completed batch
      */
-    async retrieveBatch(batchId: string, sampleObj?: T): Promise<CompletionResponse<T>[]> {
+    async retrieveBatch(batchId: string): Promise<CompletionResponse<T>[]> {
         try {
-            return await this.providerInstance.retrieveBatch<T>(batchId, this.modelName, sampleObj);
+            return await this.providerInstance.retrieveBatch<T>(batchId, this.modelName, this.sampleObj);
         } catch (error) {
             // If this is a Google provider and it doesn't support batching, throw a more specific error
             if (this.provider === Provider.Google) {
@@ -221,6 +211,7 @@ export function createAgent<T = string>(options: {
     apiKey: string;
     baseUrl?: string;
     fetchFn?: typeof fetch;
+    sampleObj?: T;
 }): LLMAgent<T> {
     return new LLMAgent<T>(options);
 }

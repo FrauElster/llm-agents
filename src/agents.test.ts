@@ -43,40 +43,6 @@ if (skipGoogleTests && skipOpenAITests) {
 
 // Test Agent Creation
 describe('Agent Creation', () => {
-    it('should create a Google agent', () => {
-        if (skipGoogleTests) {
-            console.log('Skipping Google agent creation test');
-            return;
-        }
-
-        const agent = createAgent({
-            name: 'TestGeminiAgent',
-            basePrompt: 'You are a helpful assistant.',
-            model: `${Provider.Google}/${ModelName.Gemini2Flash}`,
-            apiKey: GOOGLE_API_KEY as string,
-        });
-
-        assert.strictEqual(agent.getName(), 'TestGeminiAgent');
-        assert.strictEqual(agent.getModel(), `${Provider.Google}/${ModelName.Gemini2Flash}`);
-    });
-
-    it('should create an OpenAI agent', () => {
-        if (skipOpenAITests) {
-            console.log('Skipping OpenAI agent creation test');
-            return;
-        }
-
-        const agent = createAgent({
-            name: 'TestOpenAIAgent',
-            basePrompt: 'You are a helpful assistant.',
-            model: `${Provider.OpenAI}/${ModelName.GPT4oMini}`,
-            apiKey: OPENAI_API_KEY as string,
-        });
-
-        assert.strictEqual(agent.getName(), 'TestOpenAIAgent');
-        assert.strictEqual(agent.getModel(), `${Provider.OpenAI}/${ModelName.GPT4oMini}`);
-    });
-
     it('should throw error for invalid provider', () => {
         assert.throws(() => {
             createAgent({

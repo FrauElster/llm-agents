@@ -1,27 +1,23 @@
 {
     "compilerOptions": {
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
-        "strict": true,
-        "skipLibCheck": true,
-        "allowJs": false,
-        "resolveJsonModule": true,
-        "forceConsistentCasingInFileNames": true,
-        "allowSyntheticDefaultImports": true,
-        "allowImportingTsExtensions": true,
-        "noEmit": true,
-        "outDir": "./dist",
-        "isolatedModules": true,
-        "lib": [
-            "ESNext"
-        ]
+        "target": "ES2022", // Compatible with Node.js 23
+        "module": "NodeNext", // For ESM support with Node.js
+        "moduleResolution": "NodeNext", // Matches "type": "module" in package.json
+        "lib": ["ES2023", "DOM"], // Add ES2023 to support findLastIndex
+        "declaration": true, // Generates .d.ts files
+        "declarationMap": true, // Generates sourcemaps for .d.ts files
+        "sourceMap": true, // Generates sourcemaps for .js files
+        "outDir": "./dist", // Output to dist folder as specified in package.json
+        "rootDir": "./src", // Source code location
+        "strict": true, // Enable all strict type checking options
+        "esModuleInterop": true, // Enables compatibility with Babel-style imports
+        "skipLibCheck": true, // Skip type checking of declaration files
+        "forceConsistentCasingInFileNames": true, // Ensures consistent casing in imports
+        "removeComments": false, // Keep comments in output
+        "stripInternal": true, // Don't expose @internal in .d.ts files
+        "resolveJsonModule": true, // Allow importing JSON files
+        "verbatimModuleSyntax": true // This can help with proper import handling
     },
-    "include": [
-        "src"
-    ],
-    "exclude": [
-        "node_modules",
-        "**/*.test.ts",
-        "dist"
-    ]
+    "include": ["src/**/*"], // Process all files in src directory
+    "exclude": ["node_modules", "**/*.test.ts"] // Don't include test files in the build
 }

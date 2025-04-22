@@ -10,7 +10,7 @@ import {
     type LLMRequestOptions,
     type BatchRequestOptions,
     type ModelType,
-} from '../types.ts';
+} from '../types.js';
 
 // Define Google-specific types
 namespace GoogleTypes {
