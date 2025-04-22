@@ -1,9 +1,21 @@
 {
-    "name": "llm-agents",
+    "name": "@frauelster/llm-agents",
     "description": "A TypeScript library for interacting with multiple LLM providers",
-    "version": "1.0.0",
+    "version": "0.0.4",
     "type": "module",
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        }
+    ],
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
     "scripts": {
+        "build": "tsc",
         "lint": "tsc && biome lint . --no-errors-on-unmatched && biome format . --no-errors-on-unmatched",
         "lint:fix": "tsc && biome lint --write --unsafe . --no-errors-on-unmatched && biome format --write . --no-errors-on-unmatched",
         "test": "node --env-file=.env --test --loader ts-node/esm src/**/*.test.ts"
@@ -27,5 +39,8 @@
     "engines": {
         "node": ">=23.6.0",
         "pnpm": ">=10.0.0"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

@@ -167,16 +167,16 @@ export class OpenAIProvider implements LLMProvider {
         const structure =
             typeof sampleObj === 'object'
                 ? JSON.stringify(
-                      sampleObj,
-                      (key, value) => {
-                          if (Array.isArray(value) && value.length > 0) {
-                              // For arrays, return an array with a single example item
-                              return [typeof value[0] === 'object' ? {} : 'example'];
-                          }
-                          return value;
-                      },
-                      2,
-                  )
+                    sampleObj,
+                    (key, value) => {
+                        if (Array.isArray(value) && value.length > 0) {
+                            // For arrays, return an array with a single example item
+                            return [typeof value[0] === 'object' ? {} : 'example'];
+                        }
+                        return value;
+                    },
+                    2,
+                )
                 : typeof sampleObj;
 
         // Add structure information to the last user message, or add a new one

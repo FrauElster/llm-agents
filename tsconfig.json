@@ -10,9 +10,18 @@
         "allowSyntheticDefaultImports": true,
         "allowImportingTsExtensions": true,
         "noEmit": true,
+        "outDir": "./dist",
         "isolatedModules": true,
-        "lib": ["ESNext"]
+        "lib": [
+            "ESNext"
+        ]
     },
-    "include": ["**/*"],
-    "exclude": ["node_modules"]
+    "include": [
+        "src"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.test.ts",
+        "dist"
+    ]
 }
