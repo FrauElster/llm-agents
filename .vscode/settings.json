@@ -1,0 +1,4 @@
+{
+    "debug.javascript.autoAttachFilter": "smart",
+    "typescript.tsdk": "node_modules/typescript/lib"
+}

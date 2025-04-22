@@ -1,0 +1,31 @@
+{
+    "name": "llm-agents",
+    "description": "A TypeScript library for interacting with multiple LLM providers",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "lint": "tsc && biome lint . --no-errors-on-unmatched && biome format . --no-errors-on-unmatched",
+        "lint:fix": "tsc && biome lint --write --unsafe . --no-errors-on-unmatched && biome format --write . --no-errors-on-unmatched",
+        "test": "node --env-file=.env --test --loader ts-node/esm src/**/*.test.ts"
+    },
+    "keywords": [
+        "llm",
+        "openai",
+        "google",
+        "ai",
+        "gemini",
+        "gpt"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@biomejs/biome": "^1.9.4",
+        "@types/node": "^22.14.1",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.8.3"
+    },
+    "engines": {
+        "node": ">=23.6.0",
+        "pnpm": ">=10.0.0"
+    }
+}
