@@ -10,6 +10,8 @@ import {
     type LLMRequestOptions,
     type BatchRequestOptions,
     type ModelType,
+    type BatchRequest,
+    isBatchRequest,
 } from '../types.js';
 
 // Define OpenAI-specific types
@@ -304,7 +306,7 @@ export class OpenAIProvider implements LLMProvider {
         };
     }
 
-    async createBatch<T = string>(prompts: PromptMessage[][], model: ModelName, options: BatchRequestOptions<T> = {}): Promise<string> {
+    async createBatch<T = string>(prompts: PromptMessage[][] | BatchRequest[], model: ModelName, options: BatchRequestOptions<T> = {}): Promise<string> {
         const modelInfo = this.getModels().find(m => m.name === model);
         if (!modelInfo) {
             throw new Error(`Model not found: ${model}`);
@@ -320,7 +322,10 @@ export class OpenAIProvider implements LLMProvider {
         }
 
         const needsStructuredOutput = options.sampleObj && typeof options.sampleObj !== 'string';
-        if (needsStructuredOutput && !prompts.some(m => m.some(msg => msg.content.toLowerCase().includes('json')))) {
+        if (
+            needsStructuredOutput &&
+            !prompts.some(m => (isBatchRequest(m) ? m.messages.some(msg => msg.content.toLowerCase().includes('json')) : m.some(msg => msg.content.toLowerCase().includes('json'))))
+        ) {
             throw new Error('A message for a structured output must contain "json"');
         }
 
@@ -329,19 +334,31 @@ export class OpenAIProvider implements LLMProvider {
         const batchRequests: OpenAITypes.BatchRequest[] = [];
 
         for (let i = 0; i < prompts.length; i++) {
-            let requestId = `req_${i}_${Date.now()}`;
+            const prompt = prompts[i];
 
-            // Use agent name in request ID if available
+            let requestId = `${Date.now()}_${i}`;
+            if (options.batchName) {
+                requestId = `${options.batchName.replace(/[^a-zA-Z0-9]/g, '')}_${requestId}`;
+            }
             if (options.agentName) {
                 requestId = `${options.agentName.replace(/[^a-zA-Z0-9]/g, '')}_${requestId}`;
             }
 
-            // Optional custom batch name
-            if (options.batchName) {
-                requestId = `${options.batchName.replace(/[^a-zA-Z0-9]/g, '')}_${requestId}`;
+            if (isBatchRequest(prompt)) {
+                // If it's a batch request, we need to extract the messages
+                if (!prompt.messages || prompt.messages.length === 0) {
+                    throw new Error(`Batch request ${i} is empty`);
+                }
+                requestId = prompt.id || requestId;
             }
 
-            const messages = prompts[i];
+            const messages = isBatchRequest(prompt) ? prompt.messages : prompt;
+            if (!messages || messages.length === 0) {
+                throw new Error(`Prompt ${i} is empty`);
+            }
+            if (messages.length > 2048) {
+                throw new Error(`Prompt ${i} exceeds the maximum number of messages (2048)`);
+            }
 
             // Create OpenAI request body
             const chatRequest: OpenAITypes.ChatCompletionRequest = {

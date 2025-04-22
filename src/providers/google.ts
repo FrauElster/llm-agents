@@ -10,6 +10,7 @@ import {
     type LLMRequestOptions,
     type BatchRequestOptions,
     type ModelType,
+    type BatchRequest,
 } from '../types.js';
 
 // Define Google-specific types
@@ -219,7 +220,7 @@ export class GoogleProvider implements LLMProvider {
         };
     }
 
-    async createBatch<T = string>(prompts: PromptMessage[][], model: ModelName, options: BatchRequestOptions<T> = {}): Promise<string> {
+    async createBatch<T = string>(prompts: PromptMessage[][] | BatchRequest[], model: ModelName, options: BatchRequestOptions<T> = {}): Promise<string> {
         // Check for batch support
         const modelInfo = this.getModels().find(m => m.name === model);
 

@@ -1,5 +1,16 @@
 // src/agents.ts
-import { Provider, type ModelName, type ModelType, type PromptMessage, type CompletionResponse, type BatchStatus, type LLMRequestOptions, type BatchRequestOptions } from './types.js';
+import {
+    Provider,
+    type ModelName,
+    type ModelType,
+    type PromptMessage,
+    type CompletionResponse,
+    type BatchStatus,
+    type LLMRequestOptions,
+    type BatchRequestOptions,
+    type BatchRequest,
+    isBatchRequest,
+} from './types.js';
 import { GoogleProvider } from './providers/google.js';
 import { OpenAIProvider } from './providers/openai.js';
 
@@ -133,9 +144,16 @@ export class LLMAgent<T = string> {
     /**
      * Create a batch of prompts
      */
-    async createBatch(prompts: PromptMessage[][], options: Omit<BatchRequestOptions<T>, 'sampleObj'> = {}): Promise<string> {
+    async createBatch(prompts: PromptMessage[][] | BatchRequest[], options: Omit<BatchRequestOptions<T>, 'sampleObj'> = {}): Promise<string> {
         // Add base prompt to each message set
-        const promptsWithBasePrompt = prompts.map(messages => this.prependBasePrompt(messages));
+        for (const idx in prompts) {
+            const prompt = prompts[idx];
+            if (isBatchRequest(prompt)) {
+                prompts[idx] = { ...prompt, messages: this.prependBasePrompt(prompt.messages) };
+            } else {
+                prompts[idx] = this.prependBasePrompt(prompt);
+            }
+        }
 
         // Add agent name to options
         const optionsWithAgent = {
@@ -145,7 +163,7 @@ export class LLMAgent<T = string> {
         };
 
         try {
-            return await this.providerInstance.createBatch<T>(promptsWithBasePrompt, this.modelName, optionsWithAgent);
+            return await this.providerInstance.createBatch<T>(prompts, this.modelName, optionsWithAgent);
         } catch (error) {
             // If this is a Google provider and it doesn't support batching, throw a more specific error
             if (this.provider === Provider.Google) {

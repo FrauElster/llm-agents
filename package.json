@@ -1,7 +1,7 @@
 {
     "name": "@frauelster/llm-agents",
     "description": "A TypeScript library for interacting with multiple LLM providers",
-    "version": "0.0.6",
+    "version": "0.0.8",
     "type": "module",
     "licenses": [
         {
