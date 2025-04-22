@@ -11,7 +11,7 @@ import {
     type BatchRequestOptions,
     type ModelType,
     type BatchRequest,
-    isBatchRequest,
+    type CreateBatchResponse,
 } from '../types.js';
 
 // Define OpenAI-specific types
@@ -169,16 +169,16 @@ export class OpenAIProvider implements LLMProvider {
         const structure =
             typeof sampleObj === 'object'
                 ? JSON.stringify(
-                      sampleObj,
-                      (key, value) => {
-                          if (Array.isArray(value) && value.length > 0) {
-                              // For arrays, return an array with a single example item
-                              return [typeof value[0] === 'object' ? {} : 'example'];
-                          }
-                          return value;
-                      },
-                      2,
-                  )
+                    sampleObj,
+                    (key, value) => {
+                        if (Array.isArray(value) && value.length > 0) {
+                            // For arrays, return an array with a single example item
+                            return [typeof value[0] === 'object' ? {} : 'example'];
+                        }
+                        return value;
+                    },
+                    2,
+                )
                 : typeof sampleObj;
 
         // Add structure information to the last user message, or add a new one
@@ -247,7 +247,7 @@ export class OpenAIProvider implements LLMProvider {
             top_p: options.topP,
             frequency_penalty: options.frequencyPenalty,
             presence_penalty: options.presencePenalty,
-            seed: options.providerParams?.seed as number,
+            seed: options.seed ?? (options.providerParams?.seed as number),
         };
 
         // Add agent name as user identifier if provided
@@ -306,7 +306,7 @@ export class OpenAIProvider implements LLMProvider {
         };
     }
 
-    async createBatch<T = string>(prompts: PromptMessage[][] | BatchRequest[], model: ModelName, options: BatchRequestOptions<T> = {}): Promise<string> {
+    async createBatch<T = string>(prompts: BatchRequest[], model: ModelName, options: BatchRequestOptions<T> = {}): Promise<CreateBatchResponse> {
         const modelInfo = this.getModels().find(m => m.name === model);
         if (!modelInfo) {
             throw new Error(`Model not found: ${model}`);
@@ -322,10 +322,7 @@ export class OpenAIProvider implements LLMProvider {
         }
 
         const needsStructuredOutput = options.sampleObj && typeof options.sampleObj !== 'string';
-        if (
-            needsStructuredOutput &&
-            !prompts.some(m => (isBatchRequest(m) ? m.messages.some(msg => msg.content.toLowerCase().includes('json')) : m.some(msg => msg.content.toLowerCase().includes('json'))))
-        ) {
+        if (needsStructuredOutput && !prompts.some(m => m.messages.some(msg => msg.content.toLowerCase().includes('json')))) {
             throw new Error('A message for a structured output must contain "json"');
         }
 
@@ -343,16 +340,9 @@ export class OpenAIProvider implements LLMProvider {
             if (options.agentName) {
                 requestId = `${options.agentName.replace(/[^a-zA-Z0-9]/g, '')}_${requestId}`;
             }
+            requestId = prompt.id?.replace(/[^a-zA-Z0-9]/g, '') || requestId;
 
-            if (isBatchRequest(prompt)) {
-                // If it's a batch request, we need to extract the messages
-                if (!prompt.messages || prompt.messages.length === 0) {
-                    throw new Error(`Batch request ${i} is empty`);
-                }
-                requestId = prompt.id || requestId;
-            }
-
-            const messages = isBatchRequest(prompt) ? prompt.messages : prompt;
+            const messages = prompt.messages;
             if (!messages || messages.length === 0) {
                 throw new Error(`Prompt ${i} is empty`);
             }
@@ -440,8 +430,10 @@ export class OpenAIProvider implements LLMProvider {
 
         const batchResponse = (await response.json()) as OpenAITypes.BatchCreateResponse;
 
-        // Return batch ID with optional prefix
-        return options.agentName ? `${options.agentName.replace(/[^a-zA-Z0-9]/g, '')}_${batchResponse.id}` : batchResponse.id;
+        return {
+            requestIds: batchRequests.map(request => request.custom_id),
+            batchId: batchResponse.id,
+        }
     }
 
     async checkBatch(batchId: string, model: ModelName): Promise<BatchStatus> {

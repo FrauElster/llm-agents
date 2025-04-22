@@ -9,7 +9,7 @@ import {
     type LLMRequestOptions,
     type BatchRequestOptions,
     type BatchRequest,
-    isBatchRequest,
+    type CreateBatchResponse,
 } from './types.js';
 import { GoogleProvider } from './providers/google.js';
 import { OpenAIProvider } from './providers/openai.js';
@@ -144,15 +144,10 @@ export class LLMAgent<T = string> {
     /**
      * Create a batch of prompts
      */
-    async createBatch(prompts: PromptMessage[][] | BatchRequest[], options: Omit<BatchRequestOptions<T>, 'sampleObj'> = {}): Promise<string> {
+    async createBatch(prompts: BatchRequest[], options: Omit<BatchRequestOptions<T>, 'sampleObj'> = {}): Promise<CreateBatchResponse> {
         // Add base prompt to each message set
         for (const idx in prompts) {
-            const prompt = prompts[idx];
-            if (isBatchRequest(prompt)) {
-                prompts[idx] = { ...prompt, messages: this.prependBasePrompt(prompt.messages) };
-            } else {
-                prompts[idx] = this.prependBasePrompt(prompt);
-            }
+            prompts[idx] = { ...prompt, messages: this.prependBasePrompt(prompts[idx].messages) };
         }
 
         // Add agent name to options

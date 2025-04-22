@@ -11,6 +11,7 @@ import {
     type BatchRequestOptions,
     type ModelType,
     type BatchRequest,
+    type CreateBatchResponse,
 } from '../types.js';
 
 // Define Google-specific types
@@ -110,16 +111,16 @@ export class GoogleProvider implements LLMProvider {
         const structure =
             typeof sampleObj === 'object'
                 ? JSON.stringify(
-                      sampleObj,
-                      (key, value) => {
-                          if (Array.isArray(value) && value.length > 0) {
-                              // For arrays, return an array with a single example item
-                              return [typeof value[0] === 'object' ? {} : 'example'];
-                          }
-                          return value;
-                      },
-                      2,
-                  )
+                    sampleObj,
+                    (key, value) => {
+                        if (Array.isArray(value) && value.length > 0) {
+                            // For arrays, return an array with a single example item
+                            return [typeof value[0] === 'object' ? {} : 'example'];
+                        }
+                        return value;
+                    },
+                    2,
+                )
                 : typeof sampleObj;
 
         // Add structure information to the last user message, or add a new one
@@ -220,7 +221,7 @@ export class GoogleProvider implements LLMProvider {
         };
     }
 
-    async createBatch<T = string>(prompts: PromptMessage[][] | BatchRequest[], model: ModelName, options: BatchRequestOptions<T> = {}): Promise<string> {
+    async createBatch<T = string>(prompts: PromptMessage[][] | BatchRequest[], model: ModelName, options: BatchRequestOptions<T> = {}): Promise<CreateBatchResponse> {
         // Check for batch support
         const modelInfo = this.getModels().find(m => m.name === model);
 

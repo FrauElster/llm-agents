@@ -49,13 +49,14 @@ export interface BatchStatus {
 }
 
 export type BatchRequest = {
-    id: string;
+    id?: string;
     messages: PromptMessage[];
 };
 
-export function isBatchRequest(obj: any): obj is BatchRequest {
-    return 'id' in obj && 'messages' in obj;
-}
+export type CreateBatchResponse = {
+    batchId: string
+    requestIds: string[]
+};
 
 export type PromptMessage = {
     role: 'developer' | 'user' | 'assistant';
@@ -98,7 +99,7 @@ export interface LLMProvider {
 
     prompt<T = string>(messages: PromptMessage[], model: ModelName, options?: LLMRequestOptions<T>): Promise<CompletionResponse<T>>;
 
-    createBatch<T = string>(prompts: PromptMessage[][] | BatchRequest[], model: ModelName, options?: BatchRequestOptions<T>): Promise<string>; // Returns batch ID
+    createBatch<T = string>(prompts: BatchRequest[], model: ModelName, options?: BatchRequestOptions<T>): Promise<CreateBatchResponse>;
 
     retrieveBatch<T = string>(batchId: string, model: ModelName, sampleObj?: T): Promise<CompletionResponse<T>[]>;
 
